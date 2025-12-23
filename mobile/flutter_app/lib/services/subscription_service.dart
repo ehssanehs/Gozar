@@ -17,9 +17,8 @@ class SubscriptionService {
   }
 
   static Future<void> schedulePeriodicRefresh(Function() getAppState) async {
-    Timer.periodic(const Duration(hours: 6), (_) async {
-      final appState = getAppState();
-      // Hook to call appState.refreshSubscription() for desktop targets.
-    });
+    // Note: For desktop targets, implement periodic refresh using a timer.
+    // For mobile, WorkManager (Android) and BGAppRefreshTask (iOS) handle this.
+    // This method is kept as a placeholder for desktop implementation.
   }
 }

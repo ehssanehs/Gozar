@@ -64,6 +64,12 @@ class AppState extends ChangeNotifier {
   final List<String> connectionLinks = [];
   String? subscriptionUrl;
 
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
   Future<void> connect() async {
     if (isConnected) return;
     final config = await _xray.buildConfig(connectionLinks);
@@ -138,8 +144,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    final app = context.read<AppState>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final app = context.read<AppState>();
       app.refreshSubscription();
       SubscriptionService.schedulePeriodicRefresh(() => context.read<AppState>());
     });
