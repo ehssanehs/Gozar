@@ -142,8 +142,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    final app = context.read<AppState>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final app = context.read<AppState>();
       app.refreshSubscription();
       SubscriptionService.schedulePeriodicRefresh(() => context.read<AppState>());
     });

@@ -25,14 +25,18 @@ class Validators {
     }
     try {
       if (link.startsWith('vmess://')) {
-        final b64 = link.substring('vmess://'.length);
-        final jsonStr = utf8.decode(base64.decode(_normalizeB64(b64)));
-        final map = jsonDecode(jsonStr) as Map<String, dynamic>;
-        final host = (map['add'] ?? '').toString();
-        if (_hostAllowed(host, allowedDomain)) {
-          return ValidationResult(true);
+        try {
+          final b64 = link.substring('vmess://'.length);
+          final jsonStr = utf8.decode(base64.decode(_normalizeB64(b64)));
+          final map = jsonDecode(jsonStr) as Map<String, dynamic>;
+          final host = (map['add'] ?? '').toString();
+          if (_hostAllowed(host, allowedDomain)) {
+            return ValidationResult(true);
+          }
+          return ValidationResult(false, 'vmess host must end with $allowedDomain');
+        } on FormatException catch (e) {
+          return ValidationResult(false, 'Invalid vmess encoding: $e');
         }
-        return ValidationResult(false, 'vmess host must end with $allowedDomain');
       } else if (link.startsWith('vless://')) {
         final uri = Uri.parse(link);
         final host = uri.host;
@@ -47,13 +51,17 @@ class Validators {
         final uri = Uri.parse(link);
         String host = uri.host;
         if (host.isEmpty) {
-          final b64 = link.substring('ss://'.length);
-          final decoded = utf8.decode(base64.decode(_normalizeB64(b64)));
-          final atIdx = decoded.lastIndexOf('@');
-          if (atIdx != -1) {
-            final after = decoded.substring(atIdx + 1);
-            final parts = after.split(':');
-            host = parts.isNotEmpty ? parts.first : '';
+          try {
+            final b64 = link.substring('ss://'.length);
+            final decoded = utf8.decode(base64.decode(_normalizeB64(b64)));
+            final atIdx = decoded.lastIndexOf('@');
+            if (atIdx != -1) {
+              final after = decoded.substring(atIdx + 1);
+              final parts = after.split(':');
+              host = parts.isNotEmpty ? parts.first : '';
+            }
+          } on FormatException catch (e) {
+            return ValidationResult(false, 'Invalid shadowsocks encoding: $e');
           }
         }
         if (_hostAllowed(host, allowedDomain)) return ValidationResult(true);
