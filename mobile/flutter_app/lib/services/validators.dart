@@ -26,13 +26,17 @@ class Validators {
     try {
       if (link.startsWith('vmess://')) {
         final b64 = link.substring('vmess://'.length);
-        final jsonStr = utf8.decode(base64.decode(_normalizeB64(b64)));
-        final map = jsonDecode(jsonStr) as Map<String, dynamic>;
-        final host = (map['add'] ?? '').toString();
-        if (_hostAllowed(host, allowedDomain)) {
-          return ValidationResult(true);
+        try {
+          final jsonStr = utf8.decode(base64.decode(_normalizeB64(b64)));
+          final map = jsonDecode(jsonStr) as Map<String, dynamic>;
+          final host = (map['add'] ?? '').toString();
+          if (_hostAllowed(host, allowedDomain)) {
+            return ValidationResult(true);
+          }
+          return ValidationResult(false, 'vmess host must end with $allowedDomain');
+        } on FormatException {
+          return ValidationResult(false, 'Invalid vmess link: base64 decode failed');
         }
-        return ValidationResult(false, 'vmess host must end with $allowedDomain');
       } else if (link.startsWith('vless://')) {
         final uri = Uri.parse(link);
         final host = uri.host;
@@ -48,12 +52,16 @@ class Validators {
         String host = uri.host;
         if (host.isEmpty) {
           final b64 = link.substring('ss://'.length);
-          final decoded = utf8.decode(base64.decode(_normalizeB64(b64)));
-          final atIdx = decoded.lastIndexOf('@');
-          if (atIdx != -1) {
-            final after = decoded.substring(atIdx + 1);
-            final parts = after.split(':');
-            host = parts.isNotEmpty ? parts.first : '';
+          try {
+            final decoded = utf8.decode(base64.decode(_normalizeB64(b64)));
+            final atIdx = decoded.lastIndexOf('@');
+            if (atIdx != -1) {
+              final after = decoded.substring(atIdx + 1);
+              final parts = after.split(':');
+              host = parts.isNotEmpty ? parts.first : '';
+            }
+          } on FormatException {
+            return ValidationResult(false, 'Invalid shadowsocks link: base64 decode failed');
           }
         }
         if (_hostAllowed(host, allowedDomain)) return ValidationResult(true);

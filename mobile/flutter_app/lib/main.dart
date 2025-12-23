@@ -11,6 +11,9 @@ const kPeriodicTaskName = 'subscription_refresh';
 
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
+    // TODO: Implement subscription refresh in background
+    // This requires access to shared preferences to get subscription URL
+    // and proper error handling for background execution
     return Future.value(true);
   });
 }
