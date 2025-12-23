@@ -16,7 +16,7 @@ class SubscriptionService {
     return lines;
   }
 
-  static Future<void> schedulePeriodicRefresh(Function() getAppState) async {
+  static Future<void> schedulePeriodicRefresh() async {
     // Note: For desktop targets, implement periodic refresh using a timer.
     // For mobile, WorkManager (Android) and BGAppRefreshTask (iOS) handle this.
     // This method is kept as a placeholder for desktop implementation.

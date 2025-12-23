@@ -147,10 +147,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final app = context.read<AppState>();
-      app.refreshSubscription();
-      SubscriptionService.schedulePeriodicRefresh(() => context.read<AppState>());
+      try {
+        await app.refreshSubscription();
+      } catch (e) {
+        // Silently ignore subscription refresh errors on startup
+        // User can manually trigger refresh if needed
+      }
     });
   }
 

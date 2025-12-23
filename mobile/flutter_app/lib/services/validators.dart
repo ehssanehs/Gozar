@@ -26,17 +26,16 @@ class Validators {
     try {
       if (link.startsWith('vmess://')) {
         final b64 = link.substring('vmess://'.length);
-        try {
-          final jsonStr = utf8.decode(base64.decode(_normalizeB64(b64)));
-          final map = jsonDecode(jsonStr) as Map<String, dynamic>;
-          final host = (map['add'] ?? '').toString();
-          if (_hostAllowed(host, allowedDomain)) {
-            return ValidationResult(true);
-          }
-          return ValidationResult(false, 'vmess host must end with $allowedDomain');
-        } on FormatException {
+        final jsonStr = _safeBase64Decode(b64);
+        if (jsonStr == null) {
           return ValidationResult(false, 'Invalid vmess link: base64 decode failed');
         }
+        final map = jsonDecode(jsonStr) as Map<String, dynamic>;
+        final host = (map['add'] ?? '').toString();
+        if (_hostAllowed(host, allowedDomain)) {
+          return ValidationResult(true);
+        }
+        return ValidationResult(false, 'vmess host must end with $allowedDomain');
       } else if (link.startsWith('vless://')) {
         final uri = Uri.parse(link);
         final host = uri.host;
@@ -52,16 +51,15 @@ class Validators {
         String host = uri.host;
         if (host.isEmpty) {
           final b64 = link.substring('ss://'.length);
-          try {
-            final decoded = utf8.decode(base64.decode(_normalizeB64(b64)));
-            final atIdx = decoded.lastIndexOf('@');
-            if (atIdx != -1) {
-              final after = decoded.substring(atIdx + 1);
-              final parts = after.split(':');
-              host = parts.isNotEmpty ? parts.first : '';
-            }
-          } on FormatException {
+          final decoded = _safeBase64Decode(b64);
+          if (decoded == null) {
             return ValidationResult(false, 'Invalid shadowsocks link: base64 decode failed');
+          }
+          final atIdx = decoded.lastIndexOf('@');
+          if (atIdx != -1) {
+            final after = decoded.substring(atIdx + 1);
+            final parts = after.split(':');
+            host = parts.isNotEmpty ? parts.first : '';
           }
         }
         if (_hostAllowed(host, allowedDomain)) return ValidationResult(true);
@@ -77,6 +75,14 @@ class Validators {
   static bool _hostAllowed(String host, String allowedDomain) {
     if (host.isEmpty) return false;
     return host == allowedDomain || host.endsWith('.$allowedDomain');
+  }
+
+  static String? _safeBase64Decode(String b64String) {
+    try {
+      return utf8.decode(base64.decode(_normalizeB64(b64String)));
+    } on FormatException {
+      return null;
+    }
   }
 
   static String _normalizeB64(String s) {
