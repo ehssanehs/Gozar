@@ -16,6 +16,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _lowPowerMode = true;
 
   @override
+  void dispose() {
+    _routingController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),

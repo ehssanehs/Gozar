@@ -7,6 +7,8 @@ class ValidationResult {
 }
 
 class Validators {
+  static const int _base64PaddingBlock = 4;
+  
   static bool isAllowedSubscriptionUrl(String url, String allowedDomain) {
     try {
       final uri = Uri.parse(url);
@@ -86,9 +88,9 @@ class Validators {
   }
 
   static String _normalizeB64(String s) {
-    final pad = s.length % 4;
+    final pad = s.length % _base64PaddingBlock;
     if (pad != 0) {
-      return s + '=' * (4 - pad);
+      return s + '=' * (_base64PaddingBlock - pad);
     }
     return s;
   }

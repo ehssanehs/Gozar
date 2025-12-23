@@ -153,6 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
       final app = context.read<AppState>();
       try {
         await app.refreshSubscription();
