@@ -132,6 +132,11 @@ class AppState extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  void removeLink(String link) {
+    connectionLinks.remove(link);
+    notifyListeners();
+  }
 }
 
 class HomeScreen extends StatefulWidget {
@@ -300,8 +305,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   trailing: IconButton(
                     icon: const Icon(Icons.delete),
                     onPressed: () {
-                      app.connectionLinks.remove(l);
-                      app.notifyListeners();
+                      app.removeLink(l);
                     },
                   ),
                 ),
