@@ -282,8 +282,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   final text = _subController.text.trim();
                   if (text.isEmpty) return;
                   try {
-                    context.read<AppState>().setSubscriptionUrl(text);
-                    await context.read<AppState>().refreshSubscription();
+                    final app = context.read<AppState>();
+                    app.setSubscriptionUrl(text);
+                    await app.refreshSubscription();
                     _showSnack(context, 'Subscription refreshed');
                   } catch (e) {
                     _showSnack(context, e.toString());
