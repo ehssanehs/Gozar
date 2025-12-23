@@ -88,6 +88,7 @@ install_gomobile() {
   export PATH="/usr/local/go/bin:$PATH"
   go install golang.org/x/mobile/cmd/gomobile@latest
   go install golang.org/x/mobile/cmd/gobind@latest
+  # gomobile init can be run later if you plan to build native bindings.
 }
 
 install_android_sdk() {
@@ -159,6 +160,7 @@ build_linux() {
   tar -C "$BUNDLE_DIR" -czf "$DIST_DIR/linux/GOZAR-linux-x64.tar.gz" .
   echo "Created $DIST_DIR/linux/GOZAR-linux-x64.tar.gz"
 
+  # Try AppImage if appimagetool is available
   if [[ -x "$HOME/.local/bin/appimagetool" ]]; then
     APPIMG_TOOL="$HOME/.local/bin/appimagetool"
   else
@@ -224,21 +226,11 @@ main_menu() {
       install_go
       build_linux
       ;;
-    3)
-      echo "Windows releases must be built on Windows with MSVC toolchain and Flutter for Windows."
-      ;;
-    4)
-      echo "macOS releases must be built on macOS with Xcode and Flutter for macOS."
-      ;;
-    5)
-      echo "iOS releases must be built on macOS with Xcode (Network Extensions capability required)."
-      ;;
-    0|q|Q)
-      exit 0
-      ;;
-    *)
-      echo "Invalid choice"; exit 1
-      ;;
+    3) echo "Windows releases must be built on Windows with MSVC toolchain and Flutter for Windows." ;;
+    4) echo "macOS releases must be built on macOS with Xcode and Flutter for macOS." ;;
+    5) echo "iOS releases must be built on macOS with Xcode (Network Extensions capability required)." ;;
+    0|q|Q) exit 0 ;;
+    *) echo "Invalid choice"; exit 1 ;;
   esac
 }
 
