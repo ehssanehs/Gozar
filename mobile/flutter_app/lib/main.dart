@@ -29,9 +29,9 @@ void main() {
     constraints: Constraints(
       networkType: NetworkType.connected,
     ),
-    existingWorkPolicy: ExistingWorkPolicy.replace,
+    existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
     backoffPolicy: BackoffPolicy.linear,
-    backoffDelay: const Duration(minutes: 15),
+    backoffPolicyDelay: const Duration(minutes: 15),
   );
 
   runApp(const GozarApp());
