@@ -9,6 +9,7 @@ import 'screens/settings_screen.dart';
 
 const kPeriodicTaskName = 'subscription_refresh';
 
+@pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     // TODO: Implement subscription refresh in background
