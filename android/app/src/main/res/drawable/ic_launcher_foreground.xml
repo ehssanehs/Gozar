@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- VPN shield icon -->
+    <group
+        android:scaleX="0.6"
+        android:scaleY="0.6"
+        android:translateX="21.6"
+        android:translateY="21.6">
+        <!-- Shield outline -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M54,18L24,30v22c0,18.6 12.88,36.02 30,40.22 17.12,-4.2 30,-21.62 30,-40.22V30L54,18z"/>
+        <!-- Lock icon in center -->
+        <path
+            android:fillColor="#1976D2"
+            android:pathData="M54,36c3.31,0 6,2.69 6,6v2h-12v-2c0,-3.31 2.69,-6 6,-6z"/>
+        <path
+            android:fillColor="#1976D2"
+            android:pathData="M42,46h24c2.21,0 4,1.79 4,4v12c0,2.21 -1.79,4 -4,4H42c-2.21,0 -4,-1.79 -4,-4V50c0,-2.21 1.79,-4 4,-4z"/>
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M54,52c-1.66,0 -3,1.34 -3,3 0,1.11 0.61,2.06 1.5,2.59V62h3v-4.41c0.89,-0.53 1.5,-1.48 1.5,-2.59 0,-1.66 -1.34,-3 -3,-3z"/>
+    </group>
