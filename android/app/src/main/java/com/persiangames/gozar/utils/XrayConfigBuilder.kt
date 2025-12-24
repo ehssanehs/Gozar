@@ -272,7 +272,11 @@ object XrayConfigBuilder {
                     put(JSONObject().apply {
                         put("address", connection.serverHost)
                         put("port", connection.serverPort)
-                        put("method", method.ifEmpty { "aes-256-gcm" })
+                        // Ensure method and password are not empty for security
+                        if (method.isEmpty() || password.isEmpty()) {
+                            throw IllegalArgumentException("Shadowsocks method and password are required")
+                        }
+                        put("method", method)
                         put("password", password)
                     })
                 })

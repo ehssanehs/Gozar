@@ -29,6 +29,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: ConnectionAdapter
     
     private var pendingConnectionId: Long? = null
+    private var autoReconnectAttempted = false
+    
+    companion object {
+        private const val MAX_CLIPBOARD_LENGTH = 10000
+    }
 
     private val vpnPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -93,6 +98,8 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun checkAndAutoReconnect() {
+        if (autoReconnectAttempted) return
+        
         val prefs = getSharedPreferences("gozar_prefs", Context.MODE_PRIVATE)
         val wasConnected = prefs.getBoolean("was_connected", false)
         val selectedConnectionId = prefs.getLong("selected_connection_id", -1L)
@@ -100,26 +107,29 @@ class MainActivity : AppCompatActivity() {
         if (wasConnected && selectedConnectionId != -1L) {
             // Verify connection still exists before attempting to reconnect
             viewModel.allConnections.observe(this) { connections ->
-                val connectionExists = connections.any { it.id == selectedConnectionId }
-                if (connectionExists) {
-                    // Check VPN permission
-                    val intent = VpnService.prepare(this)
-                    if (intent == null) {
-                        // Permission already granted, auto-reconnect
-                        startVpnService(selectedConnectionId)
-                    }
-                    // If permission not granted, user will need to manually connect
-                } else {
-                    // Connection was deleted, clear the saved state
-                    prefs.edit().apply {
-                        remove("selected_connection_id")
-                        putBoolean("was_connected", false)
-                        apply()
+                if (!autoReconnectAttempted) {
+                    autoReconnectAttempted = true
+                    val connectionExists = connections.any { it.id == selectedConnectionId }
+                    if (connectionExists) {
+                        // Check VPN permission
+                        val intent = VpnService.prepare(this)
+                        if (intent == null) {
+                            // Permission already granted, auto-reconnect
+                            startVpnService(selectedConnectionId)
+                        }
+                        // If permission not granted, user will need to manually connect
+                    } else {
+                        // Connection was deleted, clear the saved state
+                        prefs.edit().apply {
+                            remove("selected_connection_id")
+                            putBoolean("was_connected", false)
+                            apply()
+                        }
                     }
                 }
-                // Remove observer after first check
-                viewModel.allConnections.removeObservers(this)
             }
+        } else {
+            autoReconnectAttempted = true
         }
     }
 
@@ -297,7 +307,7 @@ class MainActivity : AppCompatActivity() {
             val text = clipData.getItemAt(0).text?.toString()
             if (text != null && text.isNotEmpty()) {
                 // Validate clipboard content before processing
-                if (text.length > 10000) {
+                if (text.length > MAX_CLIPBOARD_LENGTH) {
                     Toast.makeText(this, "Clipboard content too long", Toast.LENGTH_SHORT).show()
                     return
                 }
