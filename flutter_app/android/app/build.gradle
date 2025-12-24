@@ -1,0 +1,116 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+if (flutterVersionCode == null) {
+    flutterVersionCode = '1'
+}
+
+def flutterVersionName = localProperties.getProperty('flutter.versionName')
+if (flutterVersionName == null) {
+    flutterVersionName = '1.0'
+}
+
+// Load signing configuration from environment variables or key.properties
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+android {
+    namespace "com.persiangames.gozar.flutter"
+    compileSdk 34
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    defaultConfig {
+        applicationId "com.persiangames.gozar.flutter"
+        minSdk 21
+        targetSdk 34
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+    }
+
+    // Signing configuration
+    signingConfigs {
+        release {
+            // Try environment variables first
+            def keystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+            def keystoreBase64 = System.getenv("ANDROID_KEYSTORE_BASE64")
+            def keystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            def keyAliasValue = System.getenv("ANDROID_KEY_ALIAS")
+            def keyPasswordValue = System.getenv("ANDROID_KEY_PASSWORD")
+
+            // Fallback to key.properties
+            if (keystorePath == null && keystoreBase64 == null) {
+                keystorePath = keystoreProperties['storeFile']
+                keystorePassword = keystoreProperties['storePassword']
+                keyAliasValue = keystoreProperties['keyAlias']
+                keyPasswordValue = keystoreProperties['keyPassword']
+            }
+
+            // Handle base64-encoded keystore
+            if (keystoreBase64 != null) {
+                def keystoreFile = file("${buildDir}/app.keystore")
+                keystoreFile.parentFile.mkdirs()
+                keystoreFile.bytes = keystoreBase64.decodeBase64()
+                storeFile keystoreFile
+            } else if (keystorePath != null) {
+                storeFile file(keystorePath)
+            }
+
+            // Only set credentials if they're available
+            if (keystorePassword != null) {
+                storePassword keystorePassword
+            }
+            if (keyAliasValue != null) {
+                keyAlias keyAliasValue
+            }
+            if (keyPasswordValue != null) {
+                keyPassword keyPasswordValue
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            // Sign if credentials are available, otherwise build unsigned
+            try {
+                signingConfig signingConfigs.release.storeFile != null ? signingConfigs.release : null
+            } catch (Exception e) {
+                println "Warning: Release signing not configured. Building unsigned APK."
+                signingConfig null
+            }
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+flutter {
+    source '../..'
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.0"
+}

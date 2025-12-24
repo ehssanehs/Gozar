@@ -1,0 +1,15 @@
+# Example signing configuration
+# Copy this file to key.properties and fill in your values
+# Alternatively, set these as environment variables in your CI/CD system
+
+# Path to your keystore file
+# storeFile=/path/to/your/keystore.jks
+
+# Keystore password
+# storePassword=your_keystore_password
+
+# Key alias
+# keyAlias=your_key_alias
+
+# Key password
+# keyPassword=your_key_password
