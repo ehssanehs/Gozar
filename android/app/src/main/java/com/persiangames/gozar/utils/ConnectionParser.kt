@@ -128,8 +128,13 @@ object ConnectionParser {
         )
     }
 
+    private fun isHostAllowed(host: String): Boolean {
+        // Exact match or subdomain (must end with .persiangames.online)
+        return host == ALLOWED_DOMAIN || host.endsWith(".$ALLOWED_DOMAIN")
+    }
+
     private fun validateHost(host: String) {
-        if (host != ALLOWED_DOMAIN && !host.endsWith(".$ALLOWED_DOMAIN")) {
+        if (!isHostAllowed(host)) {
             throw IllegalArgumentException("Connection host must be $ALLOWED_DOMAIN or a subdomain of it. Got: $host")
         }
     }
@@ -138,8 +143,8 @@ object ConnectionParser {
         return try {
             val uri = URI(url)
             // Only allow HTTPS for security
-            // Accept both exact domain and subdomains (same as connection validation)
-            uri.scheme == "https" && (uri.host == ALLOWED_DOMAIN || uri.host.endsWith(".$ALLOWED_DOMAIN"))
+            // Accept both exact domain and subdomains
+            uri.scheme == "https" && isHostAllowed(uri.host)
         } catch (e: Exception) {
             false
         }

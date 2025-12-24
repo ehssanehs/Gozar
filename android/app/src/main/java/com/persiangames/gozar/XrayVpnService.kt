@@ -117,9 +117,8 @@ class XrayVpnService : VpnService() {
                     builder.setMetered(false)
                 }
                 
-                // Allow apps to bypass VPN if needed
-                builder.allowFamily(android.system.OsConstants.AF_INET)
-                builder.allowFamily(android.system.OsConstants.AF_INET6)
+                // Note: Not using allowFamily() to ensure all traffic goes through VPN
+                // If specific apps need to bypass VPN, use allowApplication() instead
                 
                 tunInterface?.close()
                 tunInterface = builder.establish()

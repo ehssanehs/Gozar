@@ -245,6 +245,11 @@ object XrayConfigBuilder {
                 val parts = uri.userInfo.split(":", limit = 2)
                 method = parts[0]
                 password = parts.getOrNull(1) ?: ""
+                
+                // Validate immediately after parsing
+                if (method.isEmpty() || password.isEmpty()) {
+                    throw IllegalArgumentException("Shadowsocks method and password are required in userInfo")
+                }
             } else {
                 // Format: ss://base64
                 val base64 = connection.link.substring("ss://".length).split("#")[0]
@@ -256,12 +261,24 @@ object XrayConfigBuilder {
                         val parts = methodPassword.split(':', limit = 2)
                         method = parts[0]
                         password = parts.getOrNull(1) ?: ""
+                        
+                        // Validate immediately after parsing
+                        if (method.isEmpty() || password.isEmpty()) {
+                            throw IllegalArgumentException("Shadowsocks method and password are required in base64 format")
+                        }
+                    } else {
+                        throw IllegalArgumentException("Shadowsocks base64 format invalid: missing method:password")
                     }
+                } else {
+                    throw IllegalArgumentException("Shadowsocks base64 format invalid: missing @ separator")
                 }
             }
+        } catch (e: IllegalArgumentException) {
+            // Re-throw our validation exceptions
+            throw e
         } catch (e: Exception) {
-            // If parsing fails, throw exception - don't use insecure defaults
-            throw IllegalArgumentException("Failed to parse Shadowsocks connection: ${e.message}")
+            // If parsing fails, throw exception with context
+            throw IllegalArgumentException("Failed to parse Shadowsocks connection: ${e.message}", e)
         }
         
         return JSONObject().apply {
@@ -272,10 +289,6 @@ object XrayConfigBuilder {
                     put(JSONObject().apply {
                         put("address", connection.serverHost)
                         put("port", connection.serverPort)
-                        // Ensure method and password are not empty for security
-                        if (method.isEmpty() || password.isEmpty()) {
-                            throw IllegalArgumentException("Shadowsocks method and password are required")
-                        }
                         put("method", method)
                         put("password", password)
                     })
