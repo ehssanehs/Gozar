@@ -271,6 +271,62 @@ Contributions are welcome! Please:
 4. Follow existing code style
 5. Submit a pull request
 
+## Flutter Android APK Builds
+
+The repository includes a separate Flutter-based Android app at `flutter_app/` with automated CI builds.
+
+### Local Build Steps
+
+1. **Prerequisites**:
+   - Flutter SDK (stable channel) - [Install Flutter](https://flutter.dev/docs/get-started/install)
+   - Java 17 or later
+   - Android SDK with API level 34
+
+2. **Build unsigned APK**:
+   ```bash
+   cd flutter_app
+   flutter pub get
+   flutter build apk --release
+   ```
+   
+   Output: `flutter_app/build/app/outputs/apk/release/app-release.apk`
+
+3. **Build signed APK** (for production):
+   - Create a keystore: `keytool -genkey -v -keystore ~/app-release.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias upload`
+   - Copy `flutter_app/android/key.properties.example` to `flutter_app/android/key.properties`
+   - Fill in your keystore details in `key.properties`
+   - Run `flutter build apk --release`
+   
+   **Important**: Never commit `key.properties` or keystore files to git!
+
+### CI Workflow
+
+The GitHub Actions workflow at `.github/workflows/flutter-android-release.yml` automatically builds APKs on:
+- Manual workflow dispatch
+- Tags matching: `v*`, `release-*`, `android-*`
+
+### Configuring Repository Secrets for Signing
+
+To enable signed builds in CI, add these secrets in **Repository Settings → Secrets and variables → Actions**:
+
+- `ANDROID_KEYSTORE_BASE64` - Base64-encoded keystore file: `base64 -i app-release.keystore`
+- `ANDROID_KEYSTORE_PASSWORD` - Keystore password
+- `ANDROID_KEY_ALIAS` - Key alias (e.g., "upload")
+- `ANDROID_KEY_PASSWORD` - Key password
+
+Without these secrets, CI will build unsigned APKs (still functional for testing).
+
+### Finding Built Artifacts
+
+**From GitHub Actions**:
+1. Go to Actions tab → Select workflow run
+2. Download the `apk-release` artifact
+
+**From Tagged Releases**:
+- APKs are automatically attached to GitHub Releases when you push a tag
+
+For detailed information, see [flutter_app/README.md](flutter_app/README.md).
+
 ## Support
 
 - **GitHub Issues**: https://github.com/ehssanehs/Gozar/issues

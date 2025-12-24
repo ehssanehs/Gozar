@@ -1,0 +1,86 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+android {
+    namespace = "com.ehssanehs.gozar"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17
+    }
+
+    defaultConfig {
+        applicationId = "com.ehssanehs.gozar"
+        minSdk = 21
+        targetSdk = 34
+        versionCode = flutter.versionCode()
+        versionName = flutter.versionName()
+    }
+
+    signingConfigs {
+        release {
+            // Try to load from environment variables first (for CI)
+            def keystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+            def keystoreBase64 = System.getenv("ANDROID_KEYSTORE_BASE64")
+            def keystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: keystoreProperties['storePassword']
+            def keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: keystoreProperties['keyAlias']
+            def keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: keystoreProperties['keyPassword']
+
+            if (keystoreBase64) {
+                // Decode base64 keystore from environment variable
+                def keystoreFile = file("${buildDir}/app-release.keystore")
+                keystoreFile.parentFile.mkdirs()
+                keystoreFile.bytes = keystoreBase64.decodeBase64()
+                storeFile = keystoreFile
+                storePassword = keystorePassword
+                this.keyAlias = keyAlias
+                this.keyPassword = keyPassword
+            } else if (keystorePath && file(keystorePath).exists()) {
+                // Use keystore file path from environment
+                storeFile = file(keystorePath)
+                storePassword = keystorePassword
+                this.keyAlias = keyAlias
+                this.keyPassword = keyPassword
+            } else if (keystorePropertiesFile.exists()) {
+                // Use keystore from properties file
+                storeFile = file(keystoreProperties['storeFile'])
+                storePassword = keystorePassword
+                this.keyAlias = keyAlias
+                this.keyPassword = keyPassword
+            }
+            // If no signing config is found, release will be unsigned (default Flutter behavior)
+        }
+    }
+
+    buildTypes {
+        release {
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig = signingConfigs.release
+            }
+            // Enable proguard/R8 for code shrinking and obfuscation
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+flutter {
+    source = "../.."
+}

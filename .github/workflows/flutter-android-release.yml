@@ -1,0 +1,122 @@
+---
+name: Flutter Android Release
+
+"on":
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+      - 'release-*'
+      - 'android-*'
+
+jobs:
+  build:
+    name: Build Flutter Android APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required for creating releases
+      actions: read    # Required for workflow operations
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+          channel: 'stable'
+          cache: true
+          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:'
+          cache-path: >-
+            ${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:
+
+      - name: Verify Flutter installation
+        run: |
+          flutter --version
+          flutter doctor -v
+
+      - name: Get Flutter dependencies
+        working-directory: flutter_app
+        run: flutter pub get
+
+      - name: Configure signing (if secrets available)
+        working-directory: flutter_app/android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: >-
+            ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "Configuring signing with provided secrets..."
+            # Decode base64 keystore to file
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > app-release.keystore
+
+            # Export environment variables for Gradle
+            echo "ANDROID_KEYSTORE_PATH=$(pwd)/app-release.keystore" \
+              >> $GITHUB_ENV
+            echo "ANDROID_KEYSTORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD" \
+              >> $GITHUB_ENV
+            echo "ANDROID_KEY_ALIAS=$ANDROID_KEY_ALIAS" >> $GITHUB_ENV
+            echo "ANDROID_KEY_PASSWORD=$ANDROID_KEY_PASSWORD" >> $GITHUB_ENV
+
+            echo "✓ Signing configured - will build signed APK"
+          else
+            echo "⚠ No signing secrets found - will build unsigned APK"
+          fi
+
+      - name: Build APK
+        working-directory: flutter_app
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ env.ANDROID_KEYSTORE_PATH }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ env.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ env.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ env.ANDROID_KEY_PASSWORD }}
+        run: |
+          flutter build apk --release
+
+          # Show build info
+          APK_PATH="build/app/outputs/apk/release/app-release.apk"
+          if [ -f "$APK_PATH" ]; then
+            echo "✓ APK built successfully"
+            ls -lh "$APK_PATH"
+
+            # Check if APK is signed
+            if apksigner verify "$APK_PATH" 2>/dev/null; then
+              echo "✓ APK is signed"
+            else
+              echo "⚠ APK is unsigned (this is OK for testing)"
+            fi
+          else
+            echo "✗ APK not found!"
+            exit 1
+          fi
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-release
+          path: flutter_app/build/app/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Create GitHub Release (for tags)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: >-
+            flutter_app/build/app/outputs/apk/release/app-release.apk
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
