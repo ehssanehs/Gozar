@@ -31,7 +31,7 @@ class GozarApplication : Application() {
         val names = listOf("geosite.dat", "geoip.dat")
         names.forEach { name ->
             val outFile = File(targetDir, name)
-            if (!outFile.exists() || outFile.length() == 0L) {
+            if (!outFile.exists() || (outFile.exists() && outFile.length() == 0L)) {
                 try {
                     assets.open("xray/$name").use { input ->
                         FileOutputStream(outFile).use { output ->
