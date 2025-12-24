@@ -277,6 +277,62 @@ Contributions are welcome! Please:
 - **Documentation**: See `docs/` directory
 - **Build Help**: See [BUILD.md](BUILD.md)
 
+## Flutter Android APK Builds
+
+A separate Flutter-based Android app is also available in the `flutter_app/` directory. This provides an alternative implementation using Flutter.
+
+### Local Build Steps
+
+1. Navigate to the flutter_app directory:
+```bash
+cd flutter_app
+```
+
+2. Install dependencies:
+```bash
+flutter pub get
+```
+
+3. Build release APK:
+```bash
+flutter build apk --release
+```
+
+The APK will be generated at: `build/app/outputs/apk/release/app-release.apk`
+
+### CI Workflow
+
+The repository includes a GitHub Actions workflow (`.github/workflows/flutter-android-release.yml`) that automatically builds APKs:
+
+- **Triggers**: Manual dispatch or tag pushes (`v*`, `release-*`, `android-*`)
+- **Outputs**: APK artifact and GitHub Release attachment (for tags)
+- **Environment**: Flutter stable, Java 17
+
+### Signing Configuration
+
+To build signed APKs, configure GitHub repository secrets:
+
+1. Go to **Settings → Secrets and variables → Actions**
+2. Add these secrets:
+   - `ANDROID_KEYSTORE_BASE64` - Base64-encoded keystore file
+   - `ANDROID_KEYSTORE_PASSWORD` - Keystore password
+   - `ANDROID_KEY_ALIAS` - Key alias  
+   - `ANDROID_KEY_PASSWORD` - Key password
+
+To encode your keystore:
+```bash
+cat your-keystore.jks | base64 -w 0
+```
+
+For local signing, see [`flutter_app/README.md`](flutter_app/README.md) for detailed instructions using either environment variables or `keystore.properties`.
+
+### Finding Built Artifacts
+
+- **CI Builds**: Go to Actions → Select workflow run → Download from Artifacts section
+- **Tagged Releases**: APK is automatically attached to the GitHub Release
+
+**Note**: If signing secrets are not configured, the CI builds an unsigned APK that can still be installed for testing.
+
 ## License
 
 See [LICENSE.md](LICENSE.md) for details.
