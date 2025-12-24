@@ -288,6 +288,98 @@ See [LICENSE.md](LICENSE.md) for details.
 - Kotlin - Programming language
 - All contributors and testers
 
+## Flutter Android APK Builds
+
+A Flutter-based Android application is available in the `flutter_app/` directory for building standalone APK releases.
+
+### Local Build Steps
+
+1. **Prerequisites**:
+   - Flutter SDK (stable channel) - [Install Flutter](https://docs.flutter.dev/get-started/install)
+   - Android SDK with API 34
+   - Java 17
+
+2. **Build unsigned APK**:
+   ```bash
+   cd flutter_app
+   flutter pub get
+   flutter build apk --release
+   ```
+
+3. **Build signed APK** (optional):
+   
+   Create `flutter_app/android/key.properties`:
+   ```properties
+   storeFile=/path/to/your/keystore.jks
+   storePassword=your_keystore_password
+   keyAlias=your_key_alias
+   keyPassword=your_key_password
+   ```
+   
+   Then build:
+   ```bash
+   flutter build apk --release
+   ```
+
+4. **Output**: The APK will be at `flutter_app/build/app/outputs/flutter-apk/app-release.apk`
+
+### CI Workflow Overview
+
+The repository includes a GitHub Actions workflow (`.github/workflows/flutter-android-release.yml`) that automatically builds APK releases.
+
+**Triggers**:
+- Manual dispatch (Actions tab → Flutter Android Release → Run workflow)
+- Push tags matching: `v*`, `release-*`, or `android-*`
+
+**Build process**:
+1. Sets up Java 17 and Flutter stable
+2. Runs `flutter pub get` to fetch dependencies
+3. Builds release APK (signed if secrets configured, unsigned otherwise)
+4. Uploads APK as a workflow artifact (retained for 30 days)
+5. For tag pushes: Creates a GitHub Release with the APK attached
+
+### Configuring Repository Secrets for Signing
+
+To enable signed APK builds in CI:
+
+1. Go to your repository **Settings** → **Secrets and variables** → **Actions**
+2. Add the following secrets:
+
+   - **`ANDROID_KEYSTORE_BASE64`**: Base64-encoded keystore file
+     ```bash
+     base64 -w 0 your-keystore.jks > keystore.txt
+     # Copy contents of keystore.txt
+     ```
+   
+   - **`ANDROID_KEYSTORE_PASSWORD`**: Your keystore password
+   - **`ANDROID_KEY_ALIAS`**: Your key alias
+   - **`ANDROID_KEY_PASSWORD`**: Your key password
+
+Alternatively, use **`ANDROID_KEYSTORE_PATH`** instead of `ANDROID_KEYSTORE_BASE64` if you have a keystore file path accessible in the CI environment.
+
+If secrets are not configured, the workflow will build an unsigned APK, which is still functional for testing.
+
+### Finding Built Artifacts
+
+**In GitHub Actions**:
+1. Navigate to **Actions** tab in the repository
+2. Click on the workflow run
+3. Scroll to **Artifacts** section at the bottom
+4. Download **gozar-flutter-release-apk**
+
+**For tag releases**:
+1. Navigate to **Releases** in the repository
+2. Find the release corresponding to your tag
+3. Download `app-release.apk` from the release assets
+
+### Troubleshooting
+
+**`flutter: command not found`**: Install Flutter SDK and add it to your PATH
+
+**Build fails with Gradle errors**: Ensure Java 17 is installed and JAVA_HOME is set correctly
+
+**Unsigned APK warning**: This is expected if signing secrets are not configured. The APK will still work but cannot be published to Play Store.
+
 ---
 
 **Application ID**: `com.persiangames.gozar`  
