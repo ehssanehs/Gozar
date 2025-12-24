@@ -47,14 +47,16 @@ app.*.map.json
 **/android/**/gradle-wrapper.jar
 **/android/.gradle
 **/android/captures/
-**/android/gradlew
-**/android/gradlew.bat
 **/android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
 **/android/key.properties
 *.jks
 *.keystore
 keystore.properties
+
+# But keep gradlew scripts for flutter_app
+!flutter_app/android/gradlew
+!flutter_app/android/gradlew.bat
 
 # iOS related (not needed but included for completeness)
 **/ios/**/*.mode1v3
