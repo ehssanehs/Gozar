@@ -41,11 +41,8 @@ class GozarApplication : Application() {
                     Log.i(TAG, "Installed $name to ${outFile.absolutePath}")
                 } catch (e: Exception) {
                     Log.e(TAG, "Missing asset xray/$name; add it under src/main/assets/xray/", e)
-                    try {
-                        outFile.writeText("// Missing $name. Put the real file in src/main/assets/xray and reinstall.")
-                    } catch (writeException: Exception) {
-                        Log.e(TAG, "Failed to write placeholder for $name", writeException)
-                    }
+                    // Don't create a placeholder - Xray expects valid binary data
+                    // The absence of the file will be clear from the error log above
                 }
             }
         }
