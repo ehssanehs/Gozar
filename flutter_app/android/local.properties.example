@@ -1,0 +1,8 @@
+## This file must *NOT* be checked into Version Control Systems,
+# as it contains information specific to your local configuration.
+#
+# Location of the Flutter SDK. You should set this when running Flutter commands.
+# Example (update path to match your installation):
+# flutter.sdk=/Users/username/flutter
+# flutter.sdk=/home/username/flutter
+# flutter.sdk=C:\\Users\\username\\flutter

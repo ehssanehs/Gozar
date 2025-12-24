@@ -1,0 +1,11 @@
+# Example key.properties file for Android signing
+# DO NOT commit this file to version control!
+# 
+# To create a keystore, run:
+# keytool -genkey -v -keystore ~/app-release.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+# Then fill in the values below:
+#storePassword=<password from previous step>
+#keyPassword=<password from previous step>
+#keyAlias=upload
+#storeFile=<location of the key store file, such as /Users/<user name>/app-release.keystore>
