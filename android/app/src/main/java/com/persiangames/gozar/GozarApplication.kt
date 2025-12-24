@@ -22,7 +22,6 @@ class GozarApplication : Application() {
      * so Xray-core can load them by file path at runtime.
      */
     private fun installXrayAssets() {
-        val TAG = "GozarApplication"
         val targetDir = File(filesDir, "xray")
         if (!targetDir.exists() && !targetDir.mkdirs()) {
             Log.w(TAG, "Failed to create xray dir: ${targetDir.absolutePath}")
@@ -42,9 +41,17 @@ class GozarApplication : Application() {
                     Log.i(TAG, "Installed $name to ${outFile.absolutePath}")
                 } catch (e: Exception) {
                     Log.e(TAG, "Missing asset xray/$name; add it under src/main/assets/xray/", e)
-                    runCatching { outFile.writeText("// Missing $name. Put the real file in src/main/assets/xray and reinstall.") }
+                    try {
+                        outFile.writeText("// Missing $name. Put the real file in src/main/assets/xray and reinstall.")
+                    } catch (writeException: Exception) {
+                        Log.e(TAG, "Failed to write placeholder for $name", writeException)
+                    }
                 }
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "GozarApplication"
     }
 }
