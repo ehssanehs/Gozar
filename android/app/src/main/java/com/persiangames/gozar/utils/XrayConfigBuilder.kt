@@ -101,6 +101,12 @@ object XrayConfigBuilder {
             val tag = "outbound_${connection.id}"
             val outbound = generateOutbound(connection, tag)
             outbounds.put(outbound)
+            
+            // If this is the selected connection, create an alias for routing rules
+            if (connection.id == selectedConnectionId) {
+                val selectedOutbound = generateOutbound(connection, "outbound_selected")
+                outbounds.put(selectedOutbound)
+            }
         }
         
         config.put("outbounds", outbounds)

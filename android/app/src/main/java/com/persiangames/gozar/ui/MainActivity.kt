@@ -87,6 +87,25 @@ class MainActivity : AppCompatActivity() {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
+        
+        // Auto-reconnect if VPN was connected before
+        checkAndAutoReconnect()
+    }
+    
+    private fun checkAndAutoReconnect() {
+        val prefs = getSharedPreferences("gozar_prefs", Context.MODE_PRIVATE)
+        val wasConnected = prefs.getBoolean("was_connected", false)
+        val selectedConnectionId = prefs.getLong("selected_connection_id", -1L)
+        
+        if (wasConnected && selectedConnectionId != -1L) {
+            // Check VPN permission
+            val intent = VpnService.prepare(this)
+            if (intent == null) {
+                // Permission already granted, auto-reconnect
+                startVpnService(selectedConnectionId)
+            }
+            // If permission not granted, user will need to manually connect
+        }
     }
 
     private fun setupRecyclerView() {
@@ -112,6 +131,15 @@ class MainActivity : AppCompatActivity() {
         viewModel.selectedConnectionId.observe(this) { connectionId ->
             adapter.setSelectedId(connectionId)
             updateConnectButton()
+            
+            // Auto-reconnect if VPN is currently connected
+            if (viewModel.isConnected.value == true && connectionId != null) {
+                val currentConnectionId = XrayVpnService.getCurrentConnectionId()
+                if (currentConnectionId != null && currentConnectionId != connectionId) {
+                    // Connection changed while VPN is active, reconnect
+                    startVpnService(connectionId)
+                }
+            }
         }
         
         viewModel.isConnected.observe(this) { isConnected ->
