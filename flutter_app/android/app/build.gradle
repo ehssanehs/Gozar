@@ -1,0 +1,95 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withReader('UTF-8') { reader ->
+        keystoreProperties.load(reader)
+    }
+}
+
+android {
+    namespace = "com.ehssanehs.gozar"
+    compileSdk = 34
+    ndkVersion = "26.1.10909125"
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    defaultConfig {
+        applicationId = "com.ehssanehs.gozar"
+        minSdk = 21
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0.0"
+    }
+
+    signingConfigs {
+        release {
+            // Support both file-based and base64-encoded keystores
+            def keystorePath = System.getenv("ANDROID_KEYSTORE_PATH") ?: keystoreProperties['storeFile']
+            def keystoreBase64 = System.getenv("ANDROID_KEYSTORE_BASE64")
+            
+            if (keystoreBase64) {
+                // Decode base64 keystore to temporary file
+                def keystoreFile = File.createTempFile("keystore", ".jks")
+                keystoreFile.deleteOnExit()
+                keystoreFile.bytes = keystoreBase64.decodeBase64()
+                storeFile = keystoreFile
+            } else if (keystorePath) {
+                storeFile = file(keystorePath)
+            }
+            
+            storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: keystoreProperties['storePassword']
+            keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: keystoreProperties['keyAlias']
+            keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: keystoreProperties['keyPassword']
+        }
+    }
+
+    buildTypes {
+        release {
+            // Use signing config if all required properties are present
+            def hasEnvSecrets = System.getenv("ANDROID_KEYSTORE_PASSWORD") && 
+                              System.getenv("ANDROID_KEY_ALIAS") && 
+                              System.getenv("ANDROID_KEY_PASSWORD") &&
+                              (System.getenv("ANDROID_KEYSTORE_PATH") || System.getenv("ANDROID_KEYSTORE_BASE64"))
+            def hasFileSecrets = keystoreProperties['storePassword'] && 
+                               keystoreProperties['keyAlias'] && 
+                               keystoreProperties['keyPassword'] &&
+                               keystoreProperties['storeFile']
+            
+            if (hasEnvSecrets || hasFileSecrets) {
+                signingConfig = signingConfigs.release
+                println "Building SIGNED release APK"
+            } else {
+                signingConfig = null
+                println "Building UNSIGNED release APK (no signing secrets found)"
+            }
+        }
+    }
+}
+
+flutter {
+    source = "../.."
+}
+
+dependencies {
+}
