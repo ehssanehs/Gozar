@@ -260,9 +260,8 @@ object XrayConfigBuilder {
                 }
             }
         } catch (e: Exception) {
-            // If parsing fails, use defaults
-            method = "aes-256-gcm"
-            password = ""
+            // If parsing fails, throw exception - don't use insecure defaults
+            throw IllegalArgumentException("Failed to parse Shadowsocks connection: ${e.message}")
         }
         
         return JSONObject().apply {

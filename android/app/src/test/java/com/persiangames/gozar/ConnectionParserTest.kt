@@ -104,4 +104,11 @@ class ConnectionParserTest {
         val result = ConnectionParser.parseAndValidate(vlessLink)
         assertEquals("persiangames.online", result.serverHost)
     }
+
+    @Test
+    fun testSubdomainSubscriptionUrlAllowed() {
+        // Subdomain should be allowed for subscription URLs too
+        val validUrl = "https://api.persiangames.online/subscription"
+        assertTrue(ConnectionParser.isValidSubscriptionUrl(validUrl))
+    }
 }

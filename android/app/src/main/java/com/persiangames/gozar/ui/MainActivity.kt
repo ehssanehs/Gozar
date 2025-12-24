@@ -98,13 +98,28 @@ class MainActivity : AppCompatActivity() {
         val selectedConnectionId = prefs.getLong("selected_connection_id", -1L)
         
         if (wasConnected && selectedConnectionId != -1L) {
-            // Check VPN permission
-            val intent = VpnService.prepare(this)
-            if (intent == null) {
-                // Permission already granted, auto-reconnect
-                startVpnService(selectedConnectionId)
+            // Verify connection still exists before attempting to reconnect
+            viewModel.allConnections.observe(this) { connections ->
+                val connectionExists = connections.any { it.id == selectedConnectionId }
+                if (connectionExists) {
+                    // Check VPN permission
+                    val intent = VpnService.prepare(this)
+                    if (intent == null) {
+                        // Permission already granted, auto-reconnect
+                        startVpnService(selectedConnectionId)
+                    }
+                    // If permission not granted, user will need to manually connect
+                } else {
+                    // Connection was deleted, clear the saved state
+                    prefs.edit().apply {
+                        remove("selected_connection_id")
+                        putBoolean("was_connected", false)
+                        apply()
+                    }
+                }
+                // Remove observer after first check
+                viewModel.allConnections.removeObservers(this)
             }
-            // If permission not granted, user will need to manually connect
         }
     }
 

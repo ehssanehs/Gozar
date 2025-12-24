@@ -138,7 +138,8 @@ object ConnectionParser {
         return try {
             val uri = URI(url)
             // Only allow HTTPS for security
-            uri.scheme == "https" && uri.host == ALLOWED_DOMAIN
+            // Accept both exact domain and subdomains (same as connection validation)
+            uri.scheme == "https" && (uri.host == ALLOWED_DOMAIN || uri.host.endsWith(".$ALLOWED_DOMAIN"))
         } catch (e: Exception) {
             false
         }
