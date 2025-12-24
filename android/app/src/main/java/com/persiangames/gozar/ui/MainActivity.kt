@@ -32,6 +32,8 @@ class MainActivity : AppCompatActivity() {
     private var autoReconnectAttempted = false
     
     companion object {
+        // Maximum length for clipboard content to prevent DoS attacks
+        // Typical connection links are < 1KB; 10KB provides generous buffer
         private const val MAX_CLIPBOARD_LENGTH = 10000
     }
 

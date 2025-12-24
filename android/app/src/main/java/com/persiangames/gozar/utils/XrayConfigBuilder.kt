@@ -7,6 +7,10 @@ import org.json.JSONObject
 
 object XrayConfigBuilder {
     
+    // Standard Xray proxy ports
+    private const val SOCKS_PORT = 10808
+    private const val HTTP_PORT = 10809
+    
     fun buildConfig(connections: List<com.persiangames.gozar.data.Connection>, selectedConnectionId: Long): String {
         val config = JSONObject()
         
@@ -66,7 +70,7 @@ object XrayConfigBuilder {
         // Inbounds (SOCKS and HTTP proxy)
         config.put("inbounds", org.json.JSONArray().apply {
             put(JSONObject().apply {
-                put("port", 10808)
+                put("port", SOCKS_PORT)
                 put("listen", "127.0.0.1")
                 put("protocol", "socks")
                 put("settings", JSONObject().apply {
@@ -76,7 +80,7 @@ object XrayConfigBuilder {
                 put("tag", "socks-in")
             })
             put(JSONObject().apply {
-                put("port", 10809)
+                put("port", HTTP_PORT)
                 put("listen", "127.0.0.1")
                 put("protocol", "http")
                 put("tag", "http-in")
