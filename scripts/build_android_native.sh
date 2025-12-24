@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 # GOZAR Native Android Build Script
 # Installs prerequisites and builds signed release APK/AAB for Play Store submission
+#
+# NOTE: The Gradle wrapper JAR (android/gradle/wrapper/gradle-wrapper.jar) must be
+# obtained separately if not already present. You can:
+# 1. Download Gradle 8.2.2 from https://services.gradle.org/distributions/gradle-8.2.2-bin.zip
+# 2. Extract it and copy lib/gradle-wrapper-8.2.2.jar to android/gradle/wrapper/gradle-wrapper.jar
+# 3. Or use system gradle to generate it: cd android && gradle wrapper --gradle-version 8.2.2
+#
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -128,8 +135,25 @@ setup_gradle() {
     
     cd "$ANDROID_DIR"
     
+    # Check if gradle wrapper jar exists
+    if [[ ! -f gradle/wrapper/gradle-wrapper.jar ]]; then
+        warning "Gradle wrapper JAR not found. Attempting to generate..."
+        
+        if need_cmd gradle; then
+            echo "Using system gradle to generate wrapper..."
+            gradle wrapper --gradle-version 8.2.2 || {
+                warning "Failed to generate wrapper. You may need to download it manually."
+                warning "Download from: https://services.gradle.org/distributions/gradle-8.2.2-bin.zip"
+                warning "Extract and copy: lib/gradle-wrapper-8.2.2.jar to android/gradle/wrapper/gradle-wrapper.jar"
+            }
+        else
+            warning "System gradle not available. Please install gradle or download wrapper manually."
+            return 1
+        fi
+    fi
+    
     if [[ ! -f gradlew ]]; then
-        error "Gradle wrapper not found. Please ensure android/gradlew exists."
+        error "Gradle wrapper script not found. Please ensure android/gradlew exists."
     fi
     
     chmod +x gradlew
@@ -161,10 +185,12 @@ setup_signing_config() {
     echo "Creating new keystore..."
     echo "Please provide the following information:"
     
-    read -r -p "Keystore password: " STORE_PASSWORD
+    read -r -s -p "Keystore password: " STORE_PASSWORD
+    echo ""
     read -r -p "Key alias (default: gozar): " KEY_ALIAS
     KEY_ALIAS="${KEY_ALIAS:-gozar}"
-    read -r -p "Key password (press Enter to use same as keystore): " KEY_PASSWORD
+    read -r -s -p "Key password (press Enter to use same as keystore): " KEY_PASSWORD
+    echo ""
     KEY_PASSWORD="${KEY_PASSWORD:-$STORE_PASSWORD}"
     
     echo ""
@@ -180,13 +206,17 @@ setup_signing_config() {
         -keypass "$KEY_PASSWORD" \
         -dname "CN=Gozar VPN, OU=Development, O=Persian Games, L=Unknown, ST=Unknown, C=US"
     
-    # Create keystore.properties
-    cat > "$KEYSTORE_PROPS" <<EOF
+    # Create keystore.properties with proper escaping
+    # Note: Passwords with special characters may need manual editing
+    cat > "$KEYSTORE_PROPS" <<'EOF'
 storeFile=gozar-release.keystore
-storePassword=$STORE_PASSWORD
-keyAlias=$KEY_ALIAS
-keyPassword=$KEY_PASSWORD
 EOF
+    # Append passwords separately to avoid shell interpretation issues
+    {
+        echo "storePassword=$STORE_PASSWORD"
+        echo "keyAlias=$KEY_ALIAS"
+        echo "keyPassword=$KEY_PASSWORD"
+    } >> "$KEYSTORE_PROPS"
     
     chmod 600 "$KEYSTORE_PROPS"
     
