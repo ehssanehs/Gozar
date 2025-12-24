@@ -99,7 +99,7 @@ class XrayVpnService : VpnService() {
                 }
                 
                 // Get all connections for config generation
-                val allConnections = db.connectionDao().getAllConnections().value ?: emptyList()
+                val allConnections = db.connectionDao().getAllConnectionsList()
                 
                 // Build Xray config
                 val config = XrayConfigBuilder.buildConfig(allConnections, connectionId)

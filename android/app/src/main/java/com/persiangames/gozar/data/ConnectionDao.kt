@@ -8,6 +8,9 @@ interface ConnectionDao {
     @Query("SELECT * FROM connections ORDER BY addedAt DESC")
     fun getAllConnections(): LiveData<List<Connection>>
 
+    @Query("SELECT * FROM connections ORDER BY addedAt DESC")
+    suspend fun getAllConnectionsList(): List<Connection>
+
     @Query("SELECT * FROM connections WHERE id = :id")
     suspend fun getConnectionById(id: Long): Connection?
 

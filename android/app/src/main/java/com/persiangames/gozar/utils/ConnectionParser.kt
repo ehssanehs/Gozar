@@ -137,7 +137,8 @@ object ConnectionParser {
     fun isValidSubscriptionUrl(url: String): Boolean {
         return try {
             val uri = URI(url)
-            (uri.scheme == "http" || uri.scheme == "https") && uri.host == ALLOWED_DOMAIN
+            // Only allow HTTPS for security
+            uri.scheme == "https" && uri.host == ALLOWED_DOMAIN
         } catch (e: Exception) {
             false
         }

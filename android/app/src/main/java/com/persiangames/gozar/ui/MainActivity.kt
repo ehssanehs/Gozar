@@ -281,6 +281,19 @@ class MainActivity : AppCompatActivity() {
         if (clipData != null && clipData.itemCount > 0) {
             val text = clipData.getItemAt(0).text?.toString()
             if (text != null && text.isNotEmpty()) {
+                // Validate clipboard content before processing
+                if (text.length > 10000) {
+                    Toast.makeText(this, "Clipboard content too long", Toast.LENGTH_SHORT).show()
+                    return
+                }
+                // Only allow valid protocol prefixes
+                if (!text.startsWith("vmess://") && 
+                    !text.startsWith("vless://") && 
+                    !text.startsWith("trojan://") && 
+                    !text.startsWith("ss://")) {
+                    Toast.makeText(this, "Invalid connection link format", Toast.LENGTH_SHORT).show()
+                    return
+                }
                 viewModel.addConnectionFromLink(text)
             } else {
                 Toast.makeText(this, "Clipboard is empty", Toast.LENGTH_SHORT).show()

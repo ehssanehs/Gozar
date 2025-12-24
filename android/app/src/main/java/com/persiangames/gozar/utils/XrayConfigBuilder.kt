@@ -238,22 +238,31 @@ object XrayConfigBuilder {
         var method = ""
         var password = ""
         
-        // Parse ss:// link
-        if (uri.userInfo != null) {
-            // Format: ss://method:password@host:port
-            method = uri.userInfo.split(":")[0]
-            password = uri.userInfo.split(":").getOrNull(1) ?: ""
-        } else {
-            // Format: ss://base64
-            val base64 = connection.link.substring("ss://".length).split("#")[0]
-            val decoded = String(Base64.decode(base64, Base64.NO_WRAP or Base64.URL_SAFE))
-            val atIndex = decoded.lastIndexOf('@')
-            if (atIndex != -1) {
-                val methodPassword = decoded.substring(0, atIndex)
-                val parts = methodPassword.split(':')
+        try {
+            // Parse ss:// link
+            if (uri.userInfo != null && uri.userInfo.contains(":")) {
+                // Format: ss://method:password@host:port
+                val parts = uri.userInfo.split(":", limit = 2)
                 method = parts[0]
                 password = parts.getOrNull(1) ?: ""
+            } else {
+                // Format: ss://base64
+                val base64 = connection.link.substring("ss://".length).split("#")[0]
+                val decoded = String(Base64.decode(base64, Base64.NO_WRAP or Base64.URL_SAFE))
+                val atIndex = decoded.lastIndexOf('@')
+                if (atIndex != -1) {
+                    val methodPassword = decoded.substring(0, atIndex)
+                    if (methodPassword.contains(':')) {
+                        val parts = methodPassword.split(':', limit = 2)
+                        method = parts[0]
+                        password = parts.getOrNull(1) ?: ""
+                    }
+                }
             }
+        } catch (e: Exception) {
+            // If parsing fails, use defaults
+            method = "aes-256-gcm"
+            password = ""
         }
         
         return JSONObject().apply {

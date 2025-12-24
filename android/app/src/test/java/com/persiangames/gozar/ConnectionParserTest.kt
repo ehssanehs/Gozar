@@ -81,6 +81,13 @@ class ConnectionParserTest {
     }
 
     @Test
+    fun testInvalidSubscriptionUrl_HttpNotAllowed() {
+        // HTTP is not secure and should be rejected
+        val invalidUrl = "http://persiangames.online/subscription"
+        assertFalse(ConnectionParser.isValidSubscriptionUrl(invalidUrl))
+    }
+
+    @Test
     fun testSubdomainAllowed() {
         // Subdomain should be allowed
         val vlessLink = "vless://uuid@sub.persiangames.online:443#Test"
