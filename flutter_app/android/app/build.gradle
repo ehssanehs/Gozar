@@ -49,9 +49,13 @@ android {
             def keystoreBase64 = System.getenv("ANDROID_KEYSTORE_BASE64")
             
             if (keystoreBase64) {
-                // Decode base64 keystore to temporary file
-                def keystoreFile = File.createTempFile("keystore", ".jks")
+                // Decode base64 keystore to secure temporary file
+                def keystoreFile = File.createTempFile("keystore", ".jks", project.file("build"))
                 keystoreFile.deleteOnExit()
+                keystoreFile.setReadable(false, false)
+                keystoreFile.setReadable(true, true)
+                keystoreFile.setWritable(false, false)
+                keystoreFile.setWritable(true, true)
                 keystoreFile.bytes = keystoreBase64.decodeBase64()
                 storeFile = keystoreFile
             } else if (keystorePath) {
@@ -78,10 +82,8 @@ android {
             
             if (hasEnvSecrets || hasFileSecrets) {
                 signingConfig = signingConfigs.release
-                println "Building SIGNED release APK"
             } else {
                 signingConfig = null
-                println "Building UNSIGNED release APK (no signing secrets found)"
             }
         }
     }

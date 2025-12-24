@@ -1,15 +1,31 @@
 #!/bin/bash
 # Script to verify Flutter app build
-# This should be run locally with Flutter SDK installed
+# Run from repository root or flutter_app directory
 
 set -e
+
+# Detect if we're in flutter_app or repository root
+if [ -f "pubspec.yaml" ]; then
+    # We're in flutter_app
+    APP_DIR="."
+    cd ..
+    REPO_ROOT=$(pwd)
+    cd "$APP_DIR"
+elif [ -d "flutter_app" ]; then
+    # We're in repository root
+    REPO_ROOT=$(pwd)
+    APP_DIR="flutter_app"
+    cd "$APP_DIR"
+else
+    echo "Error: Run this script from repository root or flutter_app directory"
+    exit 1
+fi
 
 echo "=== Flutter Doctor ==="
 flutter doctor -v
 
 echo ""
 echo "=== Installing Dependencies ==="
-cd flutter_app
 flutter pub get
 
 echo ""
